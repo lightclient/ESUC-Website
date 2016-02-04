@@ -54,8 +54,6 @@ if ( 'plugin-information' != $tab )
 
 $body_id = $tab;
 
-wp_enqueue_script( 'updates' );
-
 /**
  * Fires before each tab on the Install Plugins screen is loaded.
  *
@@ -84,15 +82,9 @@ get_current_screen()->add_help_tab( array(
 
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __('For more information:') . '</strong></p>' .
-	'<p>' . __('<a href="https://codex.wordpress.org/Plugins_Add_New_Screen" target="_blank">Documentation on Installing Plugins</a>') . '</p>' .
+	'<p>' . __('<a href="http://codex.wordpress.org/Plugins_Add_New_Screen" target="_blank">Documentation on Installing Plugins</a>') . '</p>' .
 	'<p>' . __('<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>') . '</p>'
 );
-
-get_current_screen()->set_screen_reader_content( array(
-	'heading_views'      => __( 'Filter plugins list' ),
-	'heading_pagination' => __( 'Plugins list navigation' ),
-	'heading_list'       => __( 'Plugins list' ),
-) );
 
 /**
  * WordPress Administration Template Header.
@@ -100,7 +92,7 @@ get_current_screen()->set_screen_reader_content( array(
 include(ABSPATH . 'wp-admin/admin-header.php');
 ?>
 <div class="wrap">
-<h1>
+<h2>
 	<?php
 	echo esc_html( $title );
 	if ( ! empty( $tabs['upload'] ) && current_user_can( 'upload_plugins' ) ) {
@@ -111,10 +103,10 @@ include(ABSPATH . 'wp-admin/admin-header.php');
 			$href = self_admin_url( 'plugin-install.php?tab=upload' );
 			$text = __( 'Upload Plugin' );
 		}
-		echo ' <a href="' . $href . '" class="upload page-title-action">' . $text . '</a>';
+		echo ' <a href="' . $href . '" class="upload add-new-h2">' . $text . '</a>';
 	}
 	?>
-</h1>
+</h2>
 
 <?php
 if ( $tab !== 'upload' ) {
@@ -134,10 +126,7 @@ if ( $tab !== 'upload' ) {
  */
 do_action( "install_plugins_$tab", $paged ); ?>
 </div>
-
 <?php
-wp_print_request_filesystem_credentials_modal();
-
 /**
  * WordPress Administration Template Footer.
  */

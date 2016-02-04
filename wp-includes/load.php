@@ -8,25 +8,12 @@
  */
 
 /**
- * Return the HTTP protocol sent by the server.
- *
- * @since 4.4.0
- *
- * @return string The HTTP protocol. Default: HTTP/1.0.
- */
-function wp_get_server_protocol() {
-	$protocol = $_SERVER['SERVER_PROTOCOL'];
-	if ( ! in_array( $protocol, array( 'HTTP/1.1', 'HTTP/2', 'HTTP/2.0' ) ) ) {
-		$protocol = 'HTTP/1.0';
-	}
-	return $protocol;
-}
-
-/**
  * Turn register globals off.
  *
  * @since 2.1.0
  * @access private
+ *
+ * @return null Will return null if register_globals PHP directive was disabled.
  */
 function wp_unregister_GLOBALS() {
 	if ( !ini_get( 'register_globals' ) )
@@ -65,14 +52,14 @@ function wp_fix_server_vars() {
 	$_SERVER = array_merge( $default_server_values, $_SERVER );
 
 	// Fix for IIS when running with PHP ISAPI
-	if ( empty( $_SERVER['REQUEST_URI'] ) || ( PHP_SAPI != 'cgi-fcgi' && preg_match( '/^Microsoft-IIS\//', $_SERVER['SERVER_SOFTWARE'] ) ) ) {
+	if ( empty( $_SERVER['REQUEST_URI'] ) || ( php_sapi_name() != 'cgi-fcgi' && preg_match( '/^Microsoft-IIS\//', $_SERVER['SERVER_SOFTWARE'] ) ) ) {
 
 		// IIS Mod-Rewrite
 		if ( isset( $_SERVER['HTTP_X_ORIGINAL_URL'] ) ) {
 			$_SERVER['REQUEST_URI'] = $_SERVER['HTTP_X_ORIGINAL_URL'];
 		}
 		// IIS Isapi_Rewrite
-		elseif ( isset( $_SERVER['HTTP_X_REWRITE_URL'] ) ) {
+		else if ( isset( $_SERVER['HTTP_X_REWRITE_URL'] ) ) {
 			$_SERVER['REQUEST_URI'] = $_SERVER['HTTP_X_REWRITE_URL'];
 		} else {
 			// Use ORIG_PATH_INFO if there is no PATH_INFO
@@ -126,19 +113,13 @@ function wp_check_php_mysql_versions() {
 
 	if ( version_compare( $required_php_version, $php_version, '>' ) ) {
 		wp_load_translations_early();
-
-		$protocol = wp_get_server_protocol();
-		header( sprintf( '%s 500 Internal Server Error', $protocol ), true, 500 );
 		header( 'Content-Type: text/html; charset=utf-8' );
 		die( sprintf( __( 'Your server is running PHP version %1$s but WordPress %2$s requires at least %3$s.' ), $php_version, $wp_version, $required_php_version ) );
 	}
 
 	if ( ! extension_loaded( 'mysql' ) && ! extension_loaded( 'mysqli' ) && ! file_exists( WP_CONTENT_DIR . '/db.php' ) ) {
 		wp_load_translations_early();
-
-		$protocol = wp_get_server_protocol();
-		header( sprintf( '%s 500 Internal Server Error', $protocol ), true, 500 );
-		header( 'Content-Type: text/html; charset=utf-8' );
+		 header( 'Content-Type: text/html; charset=utf-8' );
 		die( __( 'Your PHP installation appears to be missing the MySQL extension which is required by WordPress.' ) );
 	}
 }
@@ -153,6 +134,7 @@ function wp_check_php_mysql_versions() {
 function wp_favicon_request() {
 	if ( '/favicon.ico' == $_SERVER['REQUEST_URI'] ) {
 		header('Content-Type: image/vnd.microsoft.icon');
+		header('Content-Length: 0');
 		exit;
 	}
 }
@@ -174,7 +156,7 @@ function wp_favicon_request() {
  * @global int $upgrading the unix timestamp marking when upgrading WordPress began.
  */
 function wp_maintenance() {
-	if ( ! file_exists( ABSPATH . '.maintenance' ) || wp_installing() )
+	if ( !file_exists( ABSPATH . '.maintenance' ) || defined( 'WP_INSTALLING' ) )
 		return;
 
 	global $upgrading;
@@ -191,7 +173,9 @@ function wp_maintenance() {
 
 	wp_load_translations_early();
 
-	$protocol = wp_get_server_protocol();
+	$protocol = $_SERVER["SERVER_PROTOCOL"];
+	if ( 'HTTP/1.1' != $protocol && 'HTTP/1.0' != $protocol )
+		$protocol = 'HTTP/1.0';
 	header( "$protocol 503 Service Unavailable", true, 503 );
 	header( 'Content-Type: text/html; charset=utf-8' );
 	header( 'Retry-After: 600' );
@@ -233,13 +217,13 @@ function timer_start() {
  *
  * @since 0.71
  *
- * @global float   $timestart Seconds from when timer_start() is called.
- * @global float   $timeend   Seconds from when function is called.
+ * @global float $timestart Seconds from when timer_start() is called.
+ * @global float $timeend   Seconds from when function is called.
  *
- * @param int|bool $display   Whether to echo or return the results. Accepts 0|false for return,
- *                            1|true for echo. Default 0|false.
- * @param int      $precision The number of digits from the right of the decimal to display.
- *                            Default 3.
+ * @param int $display   Whether to echo or return the results. Accepts 0|false for return,
+ *                       1|true for echo. Default 0|false.
+ * @param int $precision The number of digits from the right of the decimal to display.
+ *                       Default 3.
  * @return string The "second.microsecond" finished time calculation. The number is formatted
  *                for human consumption, both localized and rounded.
  */
@@ -397,23 +381,17 @@ function wp_set_wpdb_vars() {
 
 	if ( is_wp_error( $prefix ) ) {
 		wp_load_translations_early();
-		wp_die(
-			/* translators: 1: $table_prefix 2: wp-config.php */
-			sprintf( __( '<strong>ERROR</strong>: %1$s in %2$s can only contain numbers, letters, and underscores.' ),
-				'<code>$table_prefix</code>',
-				'<code>wp-config.php</code>'
-			)
-		);
+		wp_die( __( '<strong>ERROR</strong>: <code>$table_prefix</code> in <code>wp-config.php</code> can only contain numbers, letters, and underscores.' ) );
 	}
 }
 
 /**
+ * Access/Modify private global variable `$_wp_using_ext_object_cache`.
+ *
  * Toggle `$_wp_using_ext_object_cache` on and off without directly
  * touching global.
  *
  * @since 3.7.0
- *
- * @global bool $_wp_using_ext_object_cache
  *
  * @param bool $using Whether external object cache is being used.
  * @return bool The current 'using' setting.
@@ -449,7 +427,7 @@ function wp_start_object_cache() {
 		}
 
 		$first_init = true;
-	} elseif ( ! wp_using_ext_object_cache() && file_exists( WP_CONTENT_DIR . '/object-cache.php' ) ) {
+	} else if ( ! wp_using_ext_object_cache() && file_exists( WP_CONTENT_DIR . '/object-cache.php' ) ) {
 		/*
 		 * Sometimes advanced-cache.php can load object-cache.php before
 		 * it is loaded here. This breaks the function_exists check above
@@ -473,7 +451,7 @@ function wp_start_object_cache() {
 		wp_cache_init();
 
 	if ( function_exists( 'wp_cache_add_global_groups' ) ) {
-		wp_cache_add_global_groups( array( 'users', 'userlogins', 'usermeta', 'user_meta', 'useremail', 'userslugs', 'site-transient', 'site-options', 'site-lookup', 'blog-lookup', 'blog-details', 'rss', 'global-posts', 'blog-id-cache', 'networks' ) );
+		wp_cache_add_global_groups( array( 'users', 'userlogins', 'usermeta', 'user_meta', 'site-transient', 'site-options', 'site-lookup', 'blog-lookup', 'blog-details', 'rss', 'global-posts', 'blog-id-cache' ) );
 		wp_cache_add_non_persistent_groups( array( 'comment', 'counts', 'plugins' ) );
 	}
 }
@@ -488,12 +466,12 @@ function wp_start_object_cache() {
  */
 function wp_not_installed() {
 	if ( is_multisite() ) {
-		if ( ! is_blog_installed() && ! wp_installing() ) {
+		if ( ! is_blog_installed() && ! defined( 'WP_INSTALLING' ) ) {
 			nocache_headers();
 
 			wp_die( __( 'The site you have requested is not installed properly. Please contact the system administrator.' ) );
 		}
-	} elseif ( ! is_blog_installed() && ! wp_installing() ) {
+	} elseif ( ! is_blog_installed() && ! defined( 'WP_INSTALLING' ) ) {
 		nocache_headers();
 
 		require( ABSPATH . WPINC . '/kses.php' );
@@ -559,7 +537,7 @@ function wp_get_active_and_valid_plugins() {
 		array_unshift( $plugins, ABSPATH . 'my-hacks.php' );
 	}
 
-	if ( empty( $active_plugins ) || wp_installing() )
+	if ( empty( $active_plugins ) || defined( 'WP_INSTALLING' ) )
 		return $plugins;
 
 	$network_plugins = is_multisite() ? wp_get_active_network_plugins() : false;
@@ -659,8 +637,6 @@ function wp_clone( $object ) {
  *
  * @since 1.5.1
  *
- * @global WP_Screen $current_screen
- *
  * @return bool True if inside WordPress administration interface, false otherwise.
  */
 function is_admin() {
@@ -681,8 +657,6 @@ function is_admin() {
  * for checking roles and capabilities.
  *
  * @since 3.1.0
- *
- * @global WP_Screen $current_screen
  *
  * @return bool True if inside WordPress blog administration pages.
  */
@@ -705,8 +679,6 @@ function is_blog_admin() {
  *
  * @since 3.1.0
  *
- * @global WP_Screen $current_screen
- *
  * @return bool True if inside WordPress network administration pages.
  */
 function is_network_admin() {
@@ -728,8 +700,6 @@ function is_network_admin() {
  * {@see current_user_can()}.
  *
  * @since 3.1.0
- *
- * @global WP_Screen $current_screen
  *
  * @return bool True if inside WordPress user administration pages.
  */
@@ -764,8 +734,6 @@ function is_multisite() {
  *
  * @since 3.1.0
  *
- * @global int $blog_id
- *
  * @return int Blog id
  */
 function get_current_blog_id() {
@@ -786,10 +754,7 @@ function get_current_blog_id() {
  * @since 3.4.0
  * @access private
  *
- * @global string    $text_direction
- * @global WP_Locale $wp_locale      The WordPress date and time locale object.
- *
- * @staticvar bool $loaded
+ * @global $wp_locale The WordPress date and time locale object.
  */
 function wp_load_translations_early() {
 	global $text_direction, $wp_locale;
@@ -860,35 +825,4 @@ function wp_load_translations_early() {
 	}
 
 	$wp_locale = new WP_Locale();
-}
-
-/**
- * Check or set whether WordPress is in "installation" mode.
- *
- * If the `WP_INSTALLING` constant is defined during the bootstrap, `wp_installing()` will default to `true`.
- *
- * @since 4.4.0
- *
- * @staticvar bool $installing
- *
- * @param bool $is_installing Optional. True to set WP into Installing mode, false to turn Installing mode off.
- *                            Omit this parameter if you only want to fetch the current status.
- * @return bool True if WP is installing, otherwise false. When a `$is_installing` is passed, the function will
- *              report whether WP was in installing mode prior to the change to `$is_installing`.
- */
-function wp_installing( $is_installing = null ) {
-	static $installing = null;
-
-	// Support for the `WP_INSTALLING` constant, defined before WP is loaded.
-	if ( is_null( $installing ) ) {
-		$installing = defined( 'WP_INSTALLING' ) && WP_INSTALLING;
-	}
-
-	if ( ! is_null( $is_installing ) ) {
-		$old_installing = $installing;
-		$installing = $is_installing;
-		return (bool) $old_installing;
-	}
-
-	return (bool) $installing;
 }

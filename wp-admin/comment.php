@@ -12,10 +12,6 @@ require_once( dirname( __FILE__ ) . '/admin.php' );
 $parent_file = 'edit-comments.php';
 $submenu_file = 'edit-comments.php';
 
-/**
- * @global string $action
- */
-global $action;
 wp_reset_vars( array('action') );
 
 if ( isset( $_POST['deletecomment'] ) )
@@ -33,6 +29,17 @@ if ( isset( $_GET['dt'] ) ) {
 		$action = 'trash';
 }
 
+/**
+ * Display error message at bottom of comments.
+ *
+ * @param string $msg Error Message. Assumed to contain HTML and be sanitized.
+ */
+function comment_footer_die( $msg ) {
+	echo "<div class='wrap'><p>$msg</p></div>";
+	include( ABSPATH . 'wp-admin/admin-footer.php' );
+	die;
+}
+
 switch( $action ) {
 
 case 'editcomment' :
@@ -48,7 +55,7 @@ case 'editcomment' :
 
 	get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __( 'For more information:' ) . '</strong></p>' .
-	'<p>' . __( '<a href="https://codex.wordpress.org/Administration_Screens#Comments" target="_blank">Documentation on Comments</a>' ) . '</p>' .
+	'<p>' . __( '<a href="http://codex.wordpress.org/Administration_Screens#Comments" target="_blank">Documentation on Comments</a>' ) . '</p>' .
 	'<p>' . __( '<a href="https://wordpress.org/support/" target="_blank">Support Forums</a>' ) . '</p>'
 	);
 
@@ -58,7 +65,7 @@ case 'editcomment' :
 	$comment_id = absint( $_GET['c'] );
 
 	if ( !$comment = get_comment( $comment_id ) )
-		comment_footer_die( __( 'Invalid comment ID.' ) . sprintf(' <a href="%s">' . __('Go back') . '</a>.', 'javascript:history.go(-1)') );
+		comment_footer_die( __('Oops, no comment with this ID.') . sprintf(' <a href="%s">' . __('Go back') . '</a>.', 'javascript:history.go(-1)') );
 
 	if ( !current_user_can( 'edit_comment', $comment_id ) )
 		comment_footer_die( __('You are not allowed to edit this comment.') );
@@ -106,17 +113,19 @@ case 'spam'    :
 ?>
 <div class="wrap">
 
-<h1><?php echo esc_html( $title ); ?></h1>
+<div class="narrow">
+
+<h2><?php echo esc_html( $title ); ?></h2>
 
 <?php
 switch ( $action ) {
 	case 'spam' :
 		$caution_msg = __('You are about to mark the following comment as spam:');
-		$button      = _x( 'Mark as Spam', 'comment' );
+		$button      = __('Spam Comment');
 		break;
 	case 'trash' :
 		$caution_msg = __('You are about to move the following comment to the Trash:');
-		$button      = __('Move to Trash');
+		$button      = __('Trash Comment');
 		break;
 	case 'delete' :
 		$caution_msg = __('You are about to delete the following comment:');
@@ -141,21 +150,20 @@ if ( $comment->comment_approved != '0' ) { // if not unapproved
 			$message  = __('This comment is currently in the Trash.');
 			break;
 	}
-	if ( $message ) {
-		echo '<div class="notice notice-info"><p>' . $message . '</p></div>';
-	}
+	if ( $message )
+		echo '<div class="updated"><p>' . $message . '</p></div>';
 }
 ?>
 <p><strong><?php _e('Caution:'); ?></strong> <?php echo $caution_msg; ?></p>
 
 <table class="form-table comment-ays">
-<tr>
+<tr class="alt">
 <th scope="row"><?php _e('Author'); ?></th>
 <td><?php echo $comment->comment_author; ?></td>
 </tr>
 <?php if ( $comment->comment_author_email ) { ?>
 <tr>
-<th scope="row"><?php _e('Email'); ?></th>
+<th scope="row"><?php _e('E-mail'); ?></th>
 <td><?php echo $comment->comment_author_email; ?></td>
 </tr>
 <?php } ?>
@@ -166,56 +174,21 @@ if ( $comment->comment_approved != '0' ) { // if not unapproved
 </tr>
 <?php } ?>
 <tr>
-	<th scope="row"><?php /* translators: column name or table row header */ _e( 'In Response To' ); ?></th>
-	<td>
-	<?php
-		$post_id = $comment->comment_post_ID;
-		if ( current_user_can( 'edit_post', $post_id ) ) {
-			$post_link = "<a href='" . esc_url( get_edit_post_link( $post_id ) ) . "'>";
-			$post_link .= esc_html( get_the_title( $post_id ) ) . '</a>';
-		} else {
-			$post_link = esc_html( get_the_title( $post_id ) );
-		}
-		echo $post_link;
-
-		if ( $comment->comment_parent ) {
-			$parent      = get_comment( $comment->comment_parent );
-			$parent_link = esc_url( get_comment_link( $parent ) );
-			$name        = get_comment_author( $parent );
-			printf(
-				/* translators: %s: comment link */
-				' | ' . __( 'In reply to %s.' ),
-				'<a href="' . $parent_link . '">' . $name . '</a>'
-			);
-		}
-	?>
-	</td>
-</tr>
-<tr>
-	<th scope="row"><?php _e( 'Submitted on' ); ?></th>
-	<td>
-		<a href="<?php echo esc_url( get_comment_link( $comment ) ); ?>"><?php
-			/* translators: 1: comment date, 2: comment time */
-			printf( __( '%1$s at %2$s' ),
-				/* translators: comment date format. See http://php.net/date */
-				get_comment_date( __( 'Y/m/d' ), $comment ),
-				get_comment_date( get_option( 'time_format' ), $comment )
-			);
-		?></a>
-	</td>
-</tr>
-<tr>
 <th scope="row"><?php /* translators: field name in comment form */ _ex('Comment', 'noun'); ?></th>
 <td><?php echo $comment->comment_content; ?></td>
 </tr>
 </table>
 
-<form action="comment.php" method="get" class="comment-ays-submit">
+<p><?php _e('Are you sure you want to do this?'); ?></p>
 
-<p>
-	<?php submit_button( $button, 'primary', 'submit', false ); ?>
-	<a href="<?php echo admin_url('edit-comments.php'); ?>" class="button-cancel"><?php esc_attr_e( 'Cancel' ); ?></a></td>
-</p>
+<form action="comment.php" method="get">
+
+<table width="100%">
+<tr>
+<td><a class="button" href="<?php echo admin_url('edit-comments.php'); ?>"><?php esc_attr_e('No'); ?></a></td>
+<td class="textright"><?php submit_button( $button, 'button' ); ?></td>
+</tr>
+</table>
 
 <?php wp_nonce_field( $nonce_action ); ?>
 <input type="hidden" name="action" value="<?php echo esc_attr($formaction); ?>" />
@@ -223,6 +196,7 @@ if ( $comment->comment_approved != '0' ) { // if not unapproved
 <input type="hidden" name="noredir" value="1" />
 </form>
 
+</div>
 </div>
 <?php
 	break;
@@ -244,7 +218,7 @@ case 'unapprovecomment' :
 	$noredir = isset($_REQUEST['noredir']);
 
 	if ( !$comment = get_comment($comment_id) )
-		comment_footer_die( __( 'Invalid comment ID.' ) . sprintf(' <a href="%s">' . __('Go back') . '</a>.', 'edit-comments.php') );
+		comment_footer_die( __('Oops, no comment with this ID.') . sprintf(' <a href="%s">' . __('Go back') . '</a>.', 'edit-comments.php') );
 	if ( !current_user_can( 'edit_comment', $comment->comment_ID ) )
 		comment_footer_die( __('You are not allowed to edit comments on this post.') );
 
@@ -261,31 +235,31 @@ case 'unapprovecomment' :
 
 	switch ( $action ) {
 		case 'deletecomment' :
-			wp_delete_comment( $comment );
+			wp_delete_comment( $comment_id );
 			$redir = add_query_arg( array('deleted' => '1'), $redir );
 			break;
 		case 'trashcomment' :
-			wp_trash_comment( $comment );
+			wp_trash_comment($comment_id);
 			$redir = add_query_arg( array('trashed' => '1', 'ids' => $comment_id), $redir );
 			break;
 		case 'untrashcomment' :
-			wp_untrash_comment( $comment );
+			wp_untrash_comment($comment_id);
 			$redir = add_query_arg( array('untrashed' => '1'), $redir );
 			break;
 		case 'spamcomment' :
-			wp_spam_comment( $comment );
+			wp_spam_comment($comment_id);
 			$redir = add_query_arg( array('spammed' => '1', 'ids' => $comment_id), $redir );
 			break;
 		case 'unspamcomment' :
-			wp_unspam_comment( $comment );
+			wp_unspam_comment($comment_id);
 			$redir = add_query_arg( array('unspammed' => '1'), $redir );
 			break;
 		case 'approvecomment' :
-			wp_set_comment_status( $comment, 'approve' );
+			wp_set_comment_status( $comment_id, 'approve' );
 			$redir = add_query_arg( array( 'approved' => 1 ), $redir );
 			break;
 		case 'unapprovecomment' :
-			wp_set_comment_status( $comment, 'hold' );
+			wp_set_comment_status( $comment_id, 'hold' );
 			$redir = add_query_arg( array( 'unapproved' => 1 ), $redir );
 			break;
 	}

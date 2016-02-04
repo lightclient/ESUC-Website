@@ -1,8 +1,8 @@
 /**
  * plugin.js
  *
+ * Copyright, Moxiecode Systems AB
  * Released under LGPL License.
- * Copyright (c) 1999-2015 Ephox Corp. All rights reserved
  *
  * License: http://www.tinymce.com/license
  * Contributing: http://www.tinymce.com/contributing
@@ -30,22 +30,8 @@ tinymce.PluginManager.add('lists', function(editor) {
 		return node && !!editor.schema.getTextBlockElements()[node.nodeName];
 	}
 
-	function isEditorBody(elm) {
-		return elm === editor.getBody();
-	}
-
 	editor.on('init', function() {
 		var dom = editor.dom, selection = editor.selection;
-
-		function isEmpty(elm, keepBookmarks) {
-			var empty = dom.isEmpty(elm);
-
-			if (keepBookmarks && dom.select('span[data-mce-type=bookmark]').length > 0) {
-				return false;
-			}
-
-			return empty;
-		}
 
 		/**
 		 * Returns a range bookmark. This will convert indexed bookmarks into temporary span elements with
@@ -221,29 +207,15 @@ tinymce.PluginManager.add('lists', function(editor) {
 		}
 
 		function splitList(ul, li, newBlock) {
-			var tmpRng, fragment, bookmarks, node;
+			var tmpRng, fragment;
 
-			function removeAndKeepBookmarks(targetNode) {
-				tinymce.each(bookmarks, function(node) {
-					targetNode.parentNode.insertBefore(node, li.parentNode);
-				});
+			var bookmarks = dom.select('span[data-mce-type="bookmark"]', ul);
 
-				dom.remove(targetNode);
-			}
-
-			bookmarks = dom.select('span[data-mce-type="bookmark"]', ul);
 			newBlock = newBlock || createNewTextBlock(li);
 			tmpRng = dom.createRng();
 			tmpRng.setStartAfter(li);
 			tmpRng.setEndAfter(ul);
 			fragment = tmpRng.extractContents();
-
-			for (node = fragment.firstChild; node; node = node.firstChild) {
-				if (node.nodeName == 'LI' && dom.isEmpty(node)) {
-					dom.remove(node);
-					break;
-				}
-			}
 
 			if (!dom.isEmpty(fragment)) {
 				dom.insertAfter(fragment, ul);
@@ -251,15 +223,15 @@ tinymce.PluginManager.add('lists', function(editor) {
 
 			dom.insertAfter(newBlock, ul);
 
-			if (isEmpty(li.parentNode)) {
-				removeAndKeepBookmarks(li.parentNode);
+			if (dom.isEmpty(li.parentNode)) {
+				tinymce.each(bookmarks, function(node) {
+					li.parentNode.parentNode.insertBefore(node, li.parentNode);
+				});
+
+				dom.remove(li.parentNode);
 			}
 
 			dom.remove(li);
-
-			if (isEmpty(ul)) {
-				dom.remove(ul);
-			}
 		}
 
 		function mergeWithAdjacentLists(listBlock) {
@@ -297,7 +269,7 @@ tinymce.PluginManager.add('lists', function(editor) {
 					if (sibling && sibling.nodeName == 'LI') {
 						sibling.appendChild(ul);
 
-						if (isEmpty(parentNode)) {
+						if (dom.isEmpty(parentNode)) {
 							dom.remove(parentNode);
 						}
 					}
@@ -317,13 +289,9 @@ tinymce.PluginManager.add('lists', function(editor) {
 			var ul = li.parentNode, ulParent = ul.parentNode, newBlock;
 
 			function removeEmptyLi(li) {
-				if (isEmpty(li)) {
+				if (dom.isEmpty(li)) {
 					dom.remove(li);
 				}
-			}
-
-			if (isEditorBody(ul)) {
-				return true;
 			}
 
 			if (li.nodeName == 'DD') {
@@ -368,21 +336,23 @@ tinymce.PluginManager.add('lists', function(editor) {
 				}
 
 				return true;
-			}
-
-			if (ulParent.nodeName == 'LI') {
-				ul = ulParent;
-				newBlock = createNewTextBlock(li, 'LI');
-			} else if (isListNode(ulParent)) {
-				newBlock = createNewTextBlock(li, 'LI');
 			} else {
-				newBlock = createNewTextBlock(li);
+				if (ulParent.nodeName == 'LI') {
+					ul = ulParent;
+					newBlock = createNewTextBlock(li, 'LI');
+				} else if (isListNode(ulParent)) {
+					newBlock = createNewTextBlock(li, 'LI');
+				} else {
+					newBlock = createNewTextBlock(li);
+				}
+
+				splitList(ul, li, newBlock);
+				normalizeList(ul.parentNode);
+
+				return true;
 			}
 
-			splitList(ul, li, newBlock);
-			normalizeList(ul.parentNode);
-
-			return true;
+			return false;
 		}
 
 		function indent(li) {
@@ -610,11 +580,7 @@ tinymce.PluginManager.add('lists', function(editor) {
 			tinymce.each(getSelectedListItems(), function(li) {
 				var node, rootList;
 
-				if (isEditorBody(li.parentNode)) {
-					return;
-				}
-
-				if (isEmpty(li)) {
+				if (dom.isEmpty(li)) {
 					outdent(li);
 					return;
 				}
@@ -633,10 +599,6 @@ tinymce.PluginManager.add('lists', function(editor) {
 
 		function toggleList(listName) {
 			var parentList = dom.getParent(selection.getStart(), 'OL,UL,DL');
-
-			if (isEditorBody(parentList)) {
-				return;
-			}
 
 			if (parentList) {
 				if (parentList.nodeName == listName) {
@@ -698,11 +660,11 @@ tinymce.PluginManager.add('lists', function(editor) {
 					dom.remove(node);
 				}
 
-				if (isEmpty(toElm, true)) {
+				if (dom.isEmpty(toElm)) {
 					dom.$(toElm).empty();
 				}
 
-				if (!isEmpty(fromElm, true)) {
+				if (!dom.isEmpty(fromElm)) {
 					while ((node = fromElm.firstChild)) {
 						toElm.appendChild(node);
 					}
@@ -714,22 +676,17 @@ tinymce.PluginManager.add('lists', function(editor) {
 
 				dom.remove(fromElm);
 
-				if (isEmpty(ul) && !isEditorBody(ul)) {
+				if (dom.isEmpty(ul)) {
 					dom.remove(ul);
 				}
 			}
 
 			if (selection.isCollapsed()) {
-				var li = dom.getParent(selection.getStart(), 'LI'), ul, rng, otherLi;
+				var li = dom.getParent(selection.getStart(), 'LI');
 
 				if (li) {
-					ul = li.parentNode;
-					if (isEditorBody(ul) && dom.isEmpty(ul)) {
-						return true;
-					}
-
-					rng = selection.getRng(true);
-					otherLi = dom.getParent(findNextCaretContainer(rng, isForward), 'LI');
+					var rng = selection.getRng(true);
+					var otherLi = dom.getParent(findNextCaretContainer(rng, isForward), 'LI');
 
 					if (otherLi && otherLi != li) {
 						var bookmark = createBookmark(rng);
@@ -744,7 +701,7 @@ tinymce.PluginManager.add('lists', function(editor) {
 
 						return true;
 					} else if (!otherLi) {
-						if (!isForward && removeList(ul.nodeName)) {
+						if (!isForward && removeList(li.parentNode.nodeName)) {
 							return true;
 						}
 					}
@@ -752,22 +709,14 @@ tinymce.PluginManager.add('lists', function(editor) {
 			}
 		};
 
-		editor.on('BeforeExecCommand', function(e) {
-			var cmd = e.command.toLowerCase(), isHandled;
-
-			if (cmd == "indent") {
-				if (indentSelection()) {
-					isHandled = true;
-				}
-			} else if (cmd == "outdent") {
-				if (outdentSelection()) {
-					isHandled = true;
-				}
+		editor.addCommand('Indent', function() {
+			if (!indentSelection()) {
+				return true;
 			}
+		});
 
-			if (isHandled) {
-				editor.fire('ExecCommand', {command: e.command});
-				e.preventDefault();
+		editor.addCommand('Outdent', function() {
+			if (!outdentSelection()) {
 				return true;
 			}
 		});

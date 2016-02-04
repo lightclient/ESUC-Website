@@ -22,7 +22,7 @@ body {
 }
 
 a {
-	color: #0073aa;
+	color: #0074a2;
 	-webkit-transition-property: border, background, color;
 	transition-property: border, background, color;
 	-webkit-transition-duration: .05s;
@@ -37,39 +37,35 @@ a {
 
 a:hover,
 a:active {
-	color: #00a0d2;
+	color: #2ea2cc;
 }
 
 a:focus {
 	color: #124964;
-	-webkit-box-shadow:
-		0 0 0 1px #5b9dd9,
-		0 0 2px 1px rgba(30, 140, 190, .8);
-	box-shadow:
-		0 0 0 1px #5b9dd9,
-		0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
-.ie8 a:focus {
-	outline: #5b9dd9 solid 1px;
+a:focus,
+a:active {
+	outline: thin dotted;
 }
 
 p {
 	line-height: 1.5;
 }
 
-.login .message,
-.login #login_error {
-	border-right: 4px solid #00a0d2;
-	padding: 12px;
-	margin-right: 0;
+.login .message {
+	border-right: 4px solid #2ea2cc;
+	padding: 1px 12px;
 	background-color: #fff;
 	-webkit-box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1);
 	box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1);
 }
 
 .login #login_error {
-	border-right-color: #dc3232;
+	border-right: 4px solid #dd3d36;
+	background: #fff;
+	-webkit-box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1);
+	box-shadow: 0 1px 1px 0 rgba(0,0,0,0.1);
 }
 
 #loginform p.submit,
@@ -155,6 +151,12 @@ p {
 	margin: auto;
 }
 
+#login_error,
+.login .message {
+	margin-right: 0;
+	padding: 12px;
+}
+
 .login #nav,
 .login #backtoblog {
 	font-size: 13px;
@@ -166,7 +168,7 @@ p {
 }
 
 #backtoblog {
-	margin: 16px 0;
+	margin: 16px 0 0 0;
 }
 
 .login #nav a,
@@ -178,13 +180,7 @@ p {
 .login #nav a:hover,
 .login #backtoblog a:hover,
 .login h1 a:hover {
-	color: #00a0d2;
-}
-
-.login #nav a:focus,
-.login #backtoblog a:focus,
-.login h1 a:focus {
-	color: #124964;
+	color: #2ea2cc;
 }
 
 .login form .input,
@@ -206,31 +202,31 @@ p {
 	font-family: sans-serif;
 }
 
-.login-action-rp input[type="text"] {
-	-webkit-box-shadow: none;
-	box-shadow: none;
-	margin: 0;
-}
-
 .login #pass-strength-result {
+	width: 250px;
 	font-weight: 600;
-	margin: -1px 0 16px 5px;
+	margin: 12px 0 6px;
 	padding: 6px 5px;
 	text-align: center;
-	width: 100%;
 }
 
 .mobile #login {
 	padding: 20px 0;
 }
 
-.mobile #login form {
+.mobile #login form,
+.mobile #login .message,
+.mobile #login_error {
 	margin-right: 0;
 }
 
 .mobile #login #nav,
 .mobile #login #backtoblog {
 	margin-right: 8px;
+}
+
+.mobile #login h1 a {
+	width: auto;
 }
 
 body.interim-login {
@@ -267,7 +263,7 @@ body.interim-login {
 
 	.interim-login input[type=checkbox]:checked:before {
 		width: 16px;
-		font: normal 21px/1 dashicons;
+		font: normal 21px/1 'dashicons';
 		margin: -3px -4px 0 0;
 	}
 }
