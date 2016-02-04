@@ -25,7 +25,7 @@
 		<div class="box3 preloader-box"></div>
 		<div class="box4 preloader-box"></div>
 	</div>
-</div>	
+</div>
 
 <div id="page" class="hfeed site">
 	<a class="skip-link screen-reader-text" href="#content"><?php _e( 'Skip to content', 'perth' ); ?></a>
@@ -45,11 +45,13 @@
 	</header><!-- #masthead -->
 	<div class="header-clone"></div>
 
-	<?php if ( get_header_image() && ( get_theme_mod('front_header_type' ,'image') == 'image' && is_front_page() || get_theme_mod('site_header_type', 'image') == 'image' && !is_front_page() ) ) : ?>
-	<div class="header-image">
-		<div class="header-overlay"></div>
-		<?php perth_header_text(); ?>
-	</div>
+	<?php if (is_home() || is_front_page() ) : ?>
+		<?php if ( get_header_image() && ( get_theme_mod('front_header_type' ,'image') == 'image' && is_front_page() || get_theme_mod('site_header_type', 'image') == 'image' && !is_front_page() ) ) : ?>
+		<div class="header-image">
+			<div class="header-overlay"></div>
+			<?php perth_header_text(); ?>
+		</div>
+		<?php endif; ?>
 	<?php endif; ?>
 
 	<div id="content" class="site-content">
