@@ -1,0 +1,40 @@
+@charset "utf-8";
+
+.wp-admin select {color: red;}
+
+.wrap {background-color:#d0d0d0; width:100%;}
+
+.widefat th {
+font-weight: 800;
+color: #000000;
+
+}
+
+th, td { border-left : solid 1px #dddddd; border-right : solid 1px #dddddd;}
+
+/*crosshairs styling*/
+.rowHighlight  {
+	background-color: #aaa;
+}
+
+.columnHighlight {
+	background-color: #aaa;
+}
+
+#inptTxt { border: 2px #000000 solid; font-size:large; color:#000000; background-color:#ffffff; text-align:center; }
+
+ .ui-dialog-titlebar-close {
+  display: none;
+}
+
+.ui-dialog-content {height:60px !important; }
+
+.ui-dialog-titlebar {display:none !important; }
+
+td textarea {height:200px; width:inherit; float:right }
+
+.tablesorter-default {
+width: 200px; }
+
+
+

@@ -1,0 +1,22 @@
+db-access.php loads default settings, and scripts, creates db-access menu page and settings page, calls the gettables.js script.
+Gettables.js requests all the database's table names, builds a dropdown from which the user selects a table and builds a
+HTML table.
+The table has the following features:
+Sortable
+Filterable*
+Printable*
+Pagination*
+Exportable as a .cvs file*
+Columns selectable/removable*
+Crosshairs*
+Individual cells fully editable*
+
+* => set/unset in the settings page
+
+To make crosshairs work, lns 65 and 76 in tablesorter/css/theme.default.css commented out
+
+Since ie (even ie 11) won't allow contenteditable of td elements, I had to insert a textarea child node for each <td>
+
+In widgets-editable.js changed line 90, 91: from $this.html() to $this.val() twice since $this now refers to textarea element.
+
+For updates we use wpdb->query(); it doesn't SQL escape the text.
