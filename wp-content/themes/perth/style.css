@@ -796,6 +796,12 @@ img {
 /*--------------------------------------------------------------
 ## Captions
 --------------------------------------------------------------*/
+
+figcaption.wp-caption-text {
+    text-align: left;
+    font-size: x-small;
+}
+
 .wp-caption {
 	margin-bottom: 1.5em;
 	max-width: 100%;
