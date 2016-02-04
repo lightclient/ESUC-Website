@@ -1,0 +1,10 @@
+Changelog
+
+22 October 2015 - 1.04
+--------------------------------------
+- added exception for Buddypress in the smooth scroll code;
+- removed header text option;
+- updated demo links;
+- added option to disable the header overlay;
+- minified scripts file.
+
