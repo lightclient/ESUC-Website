@@ -46,9 +46,9 @@
 	<div class="header-clone"></div>
 
 	<!-- CUSTOM CODE -->
-	<?php if (is_home() ) : ?>
+	<?php if (is_front_page() ) : ?>
 	<!-- CUSTOM CODE -->
-		
+
 		<?php if ( get_header_image() && ( get_theme_mod('front_header_type' ,'image') == 'image' && is_front_page() || get_theme_mod('site_header_type', 'image') == 'image' && !is_front_page() ) ) : ?>
 		<div class="header-image">
 			<div class="header-overlay"></div>
