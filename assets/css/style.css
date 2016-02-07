@@ -118,7 +118,7 @@ hr.white { border-color: #F3AE9B; }
 .article-big p { margin-bottom: 20px; }
 
 /* Content */
-#hero { background: url('../img/berk-cover-3.jpg') center center no-repeat;-webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover; background-attachment: fixed; min-height: 500px; position: relative; overflow:hidden;}
+#hero { background: url('/wp-content/uploads/2016/02/EngineeringVI1000x490.jpg') center center no-repeat;-webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover; background-attachment: fixed; min-height: 500px; position: relative; overflow:hidden;}
 #hero .container { position: static; }
 #hero .hero-content { position: relative; top: 50%; left: 0; right: 0;}
 #hero hr { width: 10%; border: 0; border-top: 1px solid #FFF; display: inline-block; }
