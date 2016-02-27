@@ -162,6 +162,11 @@ hr.small {
     -o-background-size: cover;
 }
 
+.title-container {
+    background: rgb(0, 0, 0); /* Fallback */
+    background: rgba(0, 0, 0, 0.15);
+}
+
 /* About */
 
 .about {
