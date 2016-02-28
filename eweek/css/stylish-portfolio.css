@@ -160,6 +160,17 @@ hr.small {
     -moz-background-size: cover;
     background-size: cover;
     -o-background-size: cover;
+    
+    color: #fff;
+}
+.header h1 {
+    font-size: 8em;
+    text-shadow: 1px 1px 15px rgba(0,0,0,0.2);
+}
+
+.header h3 {
+    font-weight: bold;
+    text-shadow: 1px 1px 15px rgba(0,0,0,0.9);
 }
 
 .title-container {
