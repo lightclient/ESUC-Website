@@ -201,11 +201,13 @@ hr.small {
     width: 100%;
     height: 400px;
     color: #fff;
-    background: url(../img/callout.jpg) no-repeat center center scroll;
+    background: url(../img/eweek.jpg) no-repeat center center scroll;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;
     -o-background-size: cover;
+    
+    text-shadow: 1px 1px 15px rgba(0,0,0,0.8);
 }
 
 /* Portfolio */
